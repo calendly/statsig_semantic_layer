@@ -1,7 +1,6 @@
 ---
 name: Segment - User Created v1
 description: Testing metric creation
-tags: []
 sql: WITH user_created AS (
 SELECT 
   event_occurred_at_ts, --required field
@@ -38,7 +37,7 @@ LEFT JOIN user_id_to_anon_id AS ua
 	ON ucd.user_id = ua.user_id
 LEFT JOIN anon_id_to_cal_anon_id AS ac 
 	ON COALESCE(ucd.anonymous_id, ua.anonymous_id) = ac.anonymous_id
-timestampColumn: tsevent_occurred_at_ts
+timestampColumn: event_occurred_at_ts
 timestampAsDay: false
 idTypeMapping:
 - statsigUnitID: userID
