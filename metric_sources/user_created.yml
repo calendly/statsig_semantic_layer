@@ -1,0 +1,9 @@
+---
+name: Segment - User Created v1
+description: Testing metric creation
+sql: "WITH user_created AS (\nSELECT \n  event_occurred_at_ts, --required field\n  user_id, --required field\n  JSON_VALUE(properties, '$.anonymousId') as anonymous_id,\n  event\nFROM `statsig-production.statsig_analytics.segment_events`\n-- example filter to a subset of events.\n-- metric definitions could further filter to a specific event\nWHERE event IN ('user_created')\n-- Optionally use date filter macros\n-- to ensure that partition pruning is applied \n    AND event_occurred_at_date BETWEEN {statsig_start_date} AND {statsig_end_date}\n),\nuser_id_to_anon_id AS (\n    SELECT * FROM `statsig-production.statsig_analytics..user_id_to_anon_id`\n),\n\nanon_id_to_cal_anon_id AS (\n    SELECT * FROM `statsig-production.statsig_analytics..anon_id_to_cal_anon_id`\n),\n\nuser_id_to_cal_anon_id AS (\n    SELECT * FROM `statsig-production.statsig_analytics..user_id_to_cal_anon_id`\n)\n\nSELECT\n  ucd.*,\n  COALESCE(uc.cal_anonymous_id, ac.cal_anonymous_id) AS cal_anonymous_id\nFROM user_created AS ucd\nLEFT JOIN user_id_to_cal_anon_id AS uc \n\tON ucd.user_id = uc.user_id\nLEFT JOIN user_id_to_anon_id AS ua \n\tON ucd.user_id = ua.user_id\nLEFT JOIN anon_id_to_cal_anon_id AS ac \n\tON COALESCE(ucd.anonymous_id, ua.anonymous_id) = ac.anonymous_id\n"
+timestampColumn: event_occurred_at_ts
+timestampAsDay: false
+idTypeMapping:
+- statsigUnitID: userID
+  column: cal_anonymous_id
